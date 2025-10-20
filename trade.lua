@@ -42,7 +42,7 @@ local function createTradeGui()
 
 	-- Title
 	local title = Instance.new("TextLabel")
-	title.Text = "Auto Trade Sender"
+	title.Text = "Auto Trade"
 	title.Font = Enum.Font.GothamBold
 	title.TextSize = 18
 	title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -52,7 +52,7 @@ local function createTradeGui()
 
 	-- Player dropdown
 	local playerLabel = Instance.new("TextLabel")
-	playerLabel.Text = "Select Player:"
+	playerLabel.Text = "Select:"
 	playerLabel.Font = Enum.Font.Gotham
 	playerLabel.TextSize = 14
 	playerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -64,7 +64,7 @@ local function createTradeGui()
 	local dropdown = Instance.new("TextButton")
 	dropdown.Size = UDim2.new(0, 260, 0, 25)
 	dropdown.Position = UDim2.new(0, 20, 0, 65)
-	dropdown.Text = "Click to select player"
+	dropdown.Text = "Click to Select"
 	dropdown.Font = Enum.Font.Gotham
 	dropdown.TextSize = 14
 	dropdown.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
@@ -216,7 +216,6 @@ local function createTradeGui()
 			for i = 1, loops do
 				if aborted then break end
 				RemoteEvent:FireServer("TradeRequest", selectedPlayer)
-				print(string.format("[Loop %d/%d] Sent trade to %s", i, loops, selectedPlayer.Name))
 				task.wait(interval)
 			end
 

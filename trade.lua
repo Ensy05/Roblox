@@ -240,7 +240,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 			gui.Enabled = not gui.Enabled
 			print(gui.Enabled and "[UI] Shown." or "[UI] Hidden.")
 		end
-	elseif input.KeyCode == Enum.KeyCode.Delete then
+	elseif input.KeyCode == Enum.KeyCode.BackSlash then
 		if gui then
 			gui:Destroy()
 			gui = nil
@@ -248,4 +248,5 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+
 

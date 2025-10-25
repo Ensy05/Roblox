@@ -50,13 +50,14 @@ local function createTradeGui()
 	title.TextColor3 = Color3.fromRGB(255, 255, 255)
 	title.BackgroundTransparency = 1
 	title.Size = UDim2.new(1, 0, 0, 30)
+	title.Position = UDim2.new(0, 0, 0, 10)
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.Parent = frame
 
 	-- Dropdown
 	local dropdown = Instance.new("TextButton")
 	dropdown.Size = UDim2.new(0, 260, 0, 25)
-	dropdown.Position = UDim2.new(0, 20, 0, 50)
+	dropdown.Position = UDim2.new(0, 20, 0, 45)
 	dropdown.Text = "Click to Select"
 	dropdown.Font = Enum.Font.Gotham
 	dropdown.TextSize = 14
@@ -69,7 +70,7 @@ local function createTradeGui()
 	-- Scrollable player list
 	local listFrame = Instance.new("ScrollingFrame")
 	listFrame.Size = UDim2.new(0, 260, 0, 80)
-	listFrame.Position = UDim2.new(0, 20, 0, 80)
+	listFrame.Position = UDim2.new(0, 20, 0, 75)
 	listFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
 	listFrame.ScrollBarThickness = 6
 	listFrame.Visible = false
@@ -104,7 +105,7 @@ local function createTradeGui()
 	-- Duration box
 	local durationBox = Instance.new("TextBox")
 	durationBox.Size = UDim2.new(0, 140, 0, 25)
-	durationBox.Position = UDim2.new(0, 80, 0, 100)
+	durationBox.Position = UDim2.new(0, 80, 0, 85)
 	durationBox.PlaceholderText = "Duration (s)"
 	durationBox.Text = ""
 	durationBox.Font = Enum.Font.Gotham
@@ -116,7 +117,7 @@ local function createTradeGui()
 	-- Interval box
 	local intervalBox = Instance.new("TextBox")
 	intervalBox.Size = UDim2.new(0, 140, 0, 25)
-	intervalBox.Position = UDim2.new(0, 80, 0, 135)
+	intervalBox.Position = UDim2.new(0, 80, 0, 130)
 	intervalBox.PlaceholderText = "Interval (s)"
 	intervalBox.Text = ""
 	intervalBox.Font = Enum.Font.Gotham
@@ -336,4 +337,5 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+
 

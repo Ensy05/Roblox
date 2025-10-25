@@ -53,7 +53,7 @@ local function createTradeGui()
 
 	local dropdown = Instance.new("TextButton")
 	dropdown.Size = UDim2.new(0, 260, 0, 25)
-	dropdown.Position = UDim2.new(0, 20, 0, 60)
+	dropdown.Position = UDim2.new(0, 0, 0, 50)
 	dropdown.Text = "Click to Select"
 	dropdown.Font = Enum.Font.Gotham
 	dropdown.TextSize = 14
@@ -66,7 +66,7 @@ local function createTradeGui()
 	-- Scrollable player list
 	local listFrame = Instance.new("ScrollingFrame")
 	listFrame.Size = UDim2.new(0, 260, 0, 80)
-	listFrame.Position = UDim2.new(0, 20, 0, 90)
+	listFrame.Position = UDim2.new(0, 5, 0, 50)
 	listFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
 	listFrame.ScrollBarThickness = 6
 	listFrame.Visible = false
@@ -82,8 +82,8 @@ local function createTradeGui()
 	lfLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 	local durationBox = Instance.new("TextBox")
-	durationBox.Size = UDim2.new(0, 100, 0, 25)
-	durationBox.Position = UDim2.new(0, 120, 0, 100)
+	durationBox.Size = UDim2.new(0, 140, 0, 25)
+	durationBox.Position = UDim2.new(0, 80, 0, 80)
 	durationBox.PlaceholderText = "Duration (s)"
 	durationBox.Text = ""
 	durationBox.Font = Enum.Font.Gotham
@@ -96,7 +96,7 @@ local function createTradeGui()
 
 	local intervalBox = Instance.new("TextBox")
 	intervalBox.Size = UDim2.new(0, 140, 0, 25)
-	intervalBox.Position = UDim2.new(0, 120, 0, 140)
+	intervalBox.Position = UDim2.new(0, 80, 0, 110)
 	intervalBox.PlaceholderText = "Interval (s)"
 	intervalBox.Text = ""
 	intervalBox.Font = Enum.Font.Gotham
@@ -107,8 +107,8 @@ local function createTradeGui()
 
 	-- Buttons
 	local startBtn = Instance.new("TextButton")
-	startBtn.Size = UDim2.new(0, 140, 0, 35)
-	startBtn.Position = UDim2.new(0, 25, 0, 180)
+	startBtn.Size = UDim2.new(0, 120, 0, 35)
+	startBtn.Position = UDim2.new(0, 25, 0, 130)
 	startBtn.Text = "Start"
 	startBtn.Font = Enum.Font.GothamBold
 	startBtn.TextSize = 16
@@ -119,7 +119,7 @@ local function createTradeGui()
 
 	local cancelBtn = Instance.new("TextButton")
 	cancelBtn.Size = UDim2.new(0, 120, 0, 35)
-	cancelBtn.Position = UDim2.new(0, 155, 0, 180)
+	cancelBtn.Position = UDim2.new(0, 155, 0, 130)
 	cancelBtn.Text = "Cancel"
 	cancelBtn.Font = Enum.Font.GothamBold
 	cancelBtn.TextSize = 16
@@ -131,7 +131,7 @@ local function createTradeGui()
 	-- Status label
 	local statusLabel = Instance.new("TextLabel")
 	statusLabel.Size = UDim2.new(1, -20, 0, 20)
-	statusLabel.Position = UDim2.new(0, 10, 0, 230)
+	statusLabel.Position = UDim2.new(0, 10, 0, 180)
 	statusLabel.Font = Enum.Font.Gotham
 	statusLabel.TextSize = 14
 	statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -248,5 +248,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+
 
 

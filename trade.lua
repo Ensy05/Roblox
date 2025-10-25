@@ -94,7 +94,7 @@ local function createTradeGui()
 		listFrame.CanvasSize = UDim2.new(0, 0, 0, lfLayout.AbsoluteContentSize.Y)
 		for _, child in ipairs(listFrame:GetChildren()) do
 			if child:IsA("GuiObject") then
-				child.ZIndex = 6 -- 👈 child buttons above even higher
+				child.ZIndex = 6 -- child buttons above even higher
 			end
 		end
 	end)
@@ -272,26 +272,25 @@ local function createTradeGui()
 		startBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
 		statusLabel.Text = string.format("🟢 Running (%d loops)", loops)
 
-		-- ✅ Trade acceptance listener (auto stop on success)
+		-- Safe trade acceptance detector (non-blocking)
+			
 		local tradeListener
 		tradeListener = RemoteEvent.OnClientEvent:Connect(function(action, data)
 			if not running or aborted then return end
-			if action == "TradeUpdated" and type(data) == "table" then
-				local p0, p1 = data.Party0, data.Party1
-				if p0 and p1 then
-					local p0Accepted = p0.Accepted or p0.Confirmed
-					local p1Accepted = p1.Accepted or p1.Confirmed
-					print(string.format(
-						"[TradeDetector] TradeUpdated | %s(A:%s,C:%s) vs %s(A:%s,C:%s)",
-						p0.Player and p0.Player.Name or "Party0", tostring(p0.Accepted), tostring(p0.Confirmed),
-						p1.Player and p1.Player.Name or "Party1", tostring(p1.Accepted), tostring(p1.Confirmed)
-					))
-					if p0Accepted and p1Accepted then
-						print("[TradeDetector] ✅ Both players accepted/confirmed trade. Stopping auto loop.")
-						statusLabel.Text = "✅ Trade accepted — stopping..."
-						aborted = true
-					end
-				end
+			if action ~= "TradeUpdated" or type(data) ~= "table" then return end
+		
+			local p0, p1 = data.Party0, data.Party1
+			if not (p0 and p1) then return end
+		
+			-- Only proceed if both players have actually accepted/confirmed
+			local bothAccepted =
+				(p0.Accepted or p0.Confirmed) and
+				(p1.Accepted or p1.Confirmed)
+		
+			if bothAccepted then
+				print("[TradeDetector] ✅ Trade completed — stopping loop.")
+				statusLabel.Text = "✅ Trade accepted — stopping..."
+				aborted = true
 			end
 		end)
 
@@ -413,8 +412,3 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
-
-
-
-
-

@@ -51,6 +51,7 @@ local function createTradeGui()
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.Parent = frame
 
+	-- Dropdown
 	local dropdown = Instance.new("TextButton")
 	dropdown.Size = UDim2.new(0, 260, 0, 25)
 	dropdown.Position = UDim2.new(0, 20, 0, 50)
@@ -80,10 +81,12 @@ local function createTradeGui()
 	local lfLayout = Instance.new("UIListLayout", listFrame)
 	lfLayout.Padding = UDim.new(0, 2)
 	lfLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	lfLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+	-- Duration box
 	local durationBox = Instance.new("TextBox")
 	durationBox.Size = UDim2.new(0, 140, 0, 25)
-	durationBox.Position = UDim2.new(0, 80, 0, 90)
+	durationBox.Position = UDim2.new(0, 80, 0, 100)
 	durationBox.PlaceholderText = "Duration (s)"
 	durationBox.Text = ""
 	durationBox.Font = Enum.Font.Gotham
@@ -92,11 +95,10 @@ local function createTradeGui()
 	durationBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 	durationBox.Parent = frame
 
-	-- Interval field
-
+	-- Interval box
 	local intervalBox = Instance.new("TextBox")
 	intervalBox.Size = UDim2.new(0, 140, 0, 25)
-	intervalBox.Position = UDim2.new(0, 80, 0, 130)
+	intervalBox.Position = UDim2.new(0, 80, 0, 135)
 	intervalBox.PlaceholderText = "Interval (s)"
 	intervalBox.Text = ""
 	intervalBox.Font = Enum.Font.Gotham
@@ -128,10 +130,10 @@ local function createTradeGui()
 	cancelBtn.Parent = frame
 	Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 8)
 
-	-- Status label
+	-- Status
 	local statusLabel = Instance.new("TextLabel")
 	statusLabel.Size = UDim2.new(1, -20, 0, 20)
-	statusLabel.Position = UDim2.new(0, 10, 0, 215)
+	statusLabel.Position = UDim2.new(0, 10, 0, 210)
 	statusLabel.Font = Enum.Font.Gotham
 	statusLabel.TextSize = 14
 	statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -147,18 +149,19 @@ local function createTradeGui()
 		for _, c in ipairs(listFrame:GetChildren()) do
 			if c:IsA("TextButton") then c:Destroy() end
 		end
+		local others = 0
 		for _, plr in ipairs(Players:GetPlayers()) do
 			if plr ~= LocalPlayer then
+				others += 1
 				local btn = Instance.new("TextButton")
 				btn.Size = UDim2.new(1, -4, 0, 25)
 				btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 				btn.Text = plr.Name
 				btn.Font = Enum.Font.Gotham
+				btn.TextSize = 14
 				btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 				btn.Parent = listFrame
-				local btnCorner = Instance.new("UICorner")
-				btnCorner.CornerRadius = UDim.new(0, 4)
-				btnCorner.Parent = btn
+				Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 				btn.MouseButton1Click:Connect(function()
 					selectedPlayer = plr
 					dropdown.Text = "Selected: " .. plr.Name
@@ -166,12 +169,24 @@ local function createTradeGui()
 				end)
 			end
 		end
+		if others == 0 then
+			local label = Instance.new("TextLabel")
+			label.Size = UDim2.new(1, -4, 0, 25)
+			label.Text = "(no other players)"
+			label.Font = Enum.Font.Gotham
+			label.TextSize = 14
+			label.BackgroundTransparency = 1
+			label.TextColor3 = Color3.fromRGB(200, 200, 200)
+			label.Parent = listFrame
+		end
 	end
-	refreshList()
+
+	task.defer(refreshList)
 	Players.PlayerAdded:Connect(refreshList)
 	Players.PlayerRemoving:Connect(refreshList)
 
 	dropdown.MouseButton1Click:Connect(function()
+		refreshList()
 		listFrame.Visible = not listFrame.Visible
 		listFrame.ZIndex = 10
 	end)
@@ -184,13 +199,14 @@ local function createTradeGui()
 		end
 	end)
 
-	-- Start
+	-- Start button
 	startBtn.MouseButton1Click:Connect(function()
 		if running then return end
 		if not selectedPlayer then
 			statusLabel.Text = "⚠️ Select a player first!"
 			return
 		end
+
 		local totalTime = tonumber(durationBox.Text) or 60
 		local interval = tonumber(intervalBox.Text) or 2
 		local loops = math.floor(totalTime / interval)
@@ -201,24 +217,36 @@ local function createTradeGui()
 		task.spawn(function()
 			for i = 1, loops do
 				if aborted then break end
-				RemoteEvent:FireServer("TradeRequest", selectedPlayer)
-				statusLabel.Text = string.format("🟢 Loop %d/%d", i, loops)
-				for _ = 1, math.floor(interval * 10) do
-					if aborted then break end
-					task.wait(0.1)
+				if not selectedPlayer or selectedPlayer.Parent ~= Players then
+					statusLabel.Text = "⚠️ Player left or invalid!"
+					break
 				end
+
+				local ok, err = pcall(function()
+					RemoteEvent:FireServer("TradeRequest", selectedPlayer)
+				end)
+
+				if not ok then
+					statusLabel.Text = "⚠️ Trade error: " .. tostring(err)
+					break
+				end
+
+				statusLabel.Text = string.format("🟢 Loop %d/%d", i, loops)
+				task.wait(interval)
 			end
+
 			if aborted then
 				statusLabel.Text = "🔴 Aborted."
 			else
 				statusLabel.Text = "✅ Done."
 			end
+
 			startBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
 			running = false
 		end)
 	end)
 
-	-- Cancel
+	-- Cancel button
 	cancelBtn.MouseButton1Click:Connect(function()
 		if running then
 			aborted = true
@@ -248,8 +276,3 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
-
-
-
-
-

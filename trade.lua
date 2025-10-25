@@ -356,19 +356,61 @@ createTradeGui()
 -- Keybinds
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
+
+	-- Toggle GUI visibility
 	if input.KeyCode == Enum.KeyCode.RightShift then
 		if gui then
 			gui.Enabled = not gui.Enabled
 			print(gui.Enabled and "[Keybind] GUI shown" or "[Keybind] GUI hidden")
 		end
+
+	-- Full safe shutdown (BackSlash)
 	elseif input.KeyCode == Enum.KeyCode.BackSlash then
 		if gui then
-			print("[Keybind] GUI destroyed manually")
+			print("[Keybind] ⚠️ Full shutdown initiated...")
+
+			-- 🛑 Stop any running trade loop
+			if running then
+				print("[Shutdown] Stopping active loop...")
+				aborted = true
+				running = false
+			end
+
+			-- 🧹 Disconnect all RemoteEvent listeners (your script only)
+			pcall(function()
+				if getconnections then
+					for _, conn in ipairs(getconnections(RemoteEvent.OnClientEvent)) do
+						conn:Disconnect()
+					end
+					print("[Shutdown] RemoteEvent listeners disconnected.")
+				end
+			end)
+
+			-- 🧵 Attempt to cancel any spawned coroutines created by this script
+			pcall(function()
+				if getgc then
+					for _, obj in ipairs(getgc(true)) do
+						if type(obj) == "thread" then
+							-- Safely cancel threads spawned by this script if possible
+							task.cancel(obj)
+						end
+					end
+					print("[Shutdown] Any stray coroutines have been canceled.")
+				end
+			end)
+
+			-- 🧩 Destroy the GUI itself
 			gui:Destroy()
 			gui = nil
+
+			-- 🚮 Clear state
+			running = false
+			aborted = true
+			print("[Shutdown] GUI destroyed, variables cleared, script halted.")
 		end
 	end
 end)
+
 
 
 

@@ -260,6 +260,8 @@ local function createTradeGui()
 			return
 		end
 
+		-- Function loop to trade
+
 		local totalTime = tonumber(durationBox.Text) or 60
 		local interval = tonumber(intervalBox.Text) or 2
 		local loops = math.floor(totalTime / interval)
@@ -268,6 +270,29 @@ local function createTradeGui()
 		running, aborted = true, false
 		startBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
 		statusLabel.Text = string.format("🟢 Running (%d loops)", loops)
+
+		-- ✅ Trade acceptance listener (auto stop on success)
+		local tradeListener
+		tradeListener = RemoteEvent.OnClientEvent:Connect(function(action, data)
+			if not running or aborted then return end
+			if action == "TradeUpdated" and type(data) == "table" then
+				local p0, p1 = data.Party0, data.Party1
+				if p0 and p1 then
+					local p0Accepted = p0.Accepted or p0.Confirmed
+					local p1Accepted = p1.Accepted or p1.Confirmed
+					print(string.format(
+						"[TradeDetector] TradeUpdated | %s(A:%s,C:%s) vs %s(A:%s,C:%s)",
+						p0.Player and p0.Player.Name or "Party0", tostring(p0.Accepted), tostring(p0.Confirmed),
+						p1.Player and p1.Player.Name or "Party1", tostring(p1.Accepted), tostring(p1.Confirmed)
+					))
+					if p0Accepted and p1Accepted then
+						print("[TradeDetector] ✅ Both players accepted/confirmed trade. Stopping auto loop.")
+						statusLabel.Text = "✅ Trade accepted — stopping..."
+						aborted = true
+					end
+				end
+			end
+		end)
 
 		task.spawn(function()
 			for i = 1, loops do
@@ -294,7 +319,7 @@ local function createTradeGui()
 			end
 
 			if aborted then
-				print("[TradeLoop] Aborted manually.")
+				print("[TradeLoop] Aborted manually or by trade accept.")
 				statusLabel.Text = "🔴 Aborted."
 			else
 				print("[TradeLoop] Finished all loops successfully.")
@@ -303,6 +328,13 @@ local function createTradeGui()
 
 			startBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
 			running = false
+
+			-- ✅ Cleanup listener after loop ends
+			if tradeListener then
+				tradeListener:Disconnect()
+				tradeListener = nil
+				print("[TradeDetector] Disconnected listener.")
+			end
 		end)
 	end)
 
@@ -337,5 +369,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+
 
 

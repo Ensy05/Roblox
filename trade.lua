@@ -339,15 +339,15 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 	elseif input.KeyCode == Enum.KeyCode.BackSlash then
 		if gui then
 			print("[Keybind] ⚠️ Full shutdown initiated...")
-
-			-- Stop active loops
+	
+			-- 🛑 Stop active loops
 			if running then
 				aborted = true
 				running = false
 				print("[Shutdown] Trade loop stopped.")
 			end
-
-			-- Disconnect stored event connections
+	
+			-- 🧹 Disconnect stored event connections (player join/leave)
 			for _, conn in ipairs(connections) do
 				if typeof(conn) == "RBXScriptConnection" then
 					conn:Disconnect()
@@ -355,34 +355,13 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 			end
 			table.clear(connections)
 			print("[Shutdown] PlayerAdded/PlayerRemoving connections cleared.")
-
-			-- Disconnect RemoteEvent listeners
-			pcall(function()
-				if getconnections then
-					for _, conn in ipairs(getconnections(RemoteEvent.OnClientEvent)) do
-						conn:Disconnect()
-					end
-					print("[Shutdown] RemoteEvent connections disconnected.")
-				end
-			end)
-
-			-- Cancel coroutines (safe in Delta)
-			pcall(function()
-				if getgc then
-					for _, obj in ipairs(getgc(true)) do
-						if type(obj) == "thread" then
-							task.cancel(obj)
-						end
-					end
-					print("[Shutdown] Stray coroutines canceled.")
-				end
-			end)
-
-			-- Destroy GUI
+	
+			-- 🧩 Destroy GUI
 			gui:Destroy()
 			gui = nil
 			print("[Shutdown] GUI destroyed, memory released.")
 		end
 	end
 end)
+
 

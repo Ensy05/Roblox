@@ -12,6 +12,7 @@ local RemoteEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("RemoteEvent")
 
 --// State
+local connections = {} -- store active event connections
 local running, aborted = false, false
 local gui
 
@@ -219,15 +220,15 @@ local function createTradeGui()
 		refreshList()
 	end)
 
-	Players.PlayerAdded:Connect(function(plr)
+	table.insert(connections, Players.PlayerAdded:Connect(function(plr)
 		print("[PlayerList] Player joined:", plr.Name)
 		refreshList()
-	end)
+	end))
 
-	Players.PlayerRemoving:Connect(function(plr)
+	table.insert(connections, Players.PlayerRemoving:Connect(function(plr)
 		print("[PlayerList] Player left:", plr.Name)
 		refreshList()
-	end)
+	end))
 
 	-- Dropdown toggle
 	dropdown.MouseButton1Click:Connect(function()
@@ -357,59 +358,62 @@ createTradeGui()
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 
-	-- Toggle GUI visibility
 	if input.KeyCode == Enum.KeyCode.RightShift then
 		if gui then
 			gui.Enabled = not gui.Enabled
 			print(gui.Enabled and "[Keybind] GUI shown" or "[Keybind] GUI hidden")
 		end
 
-	-- Full safe shutdown (BackSlash)
 	elseif input.KeyCode == Enum.KeyCode.BackSlash then
 		if gui then
 			print("[Keybind] ⚠️ Full shutdown initiated...")
 
-			-- 🛑 Stop any running trade loop
+			-- Stop active loops
 			if running then
-				print("[Shutdown] Stopping active loop...")
 				aborted = true
 				running = false
+				print("[Shutdown] Trade loop stopped.")
 			end
 
-			-- 🧹 Disconnect all RemoteEvent listeners (your script only)
+			-- Disconnect stored event connections
+			for _, conn in ipairs(connections) do
+				if typeof(conn) == "RBXScriptConnection" then
+					conn:Disconnect()
+				end
+			end
+			table.clear(connections)
+			print("[Shutdown] PlayerAdded/PlayerRemoving connections cleared.")
+
+			-- Disconnect RemoteEvent listeners
 			pcall(function()
 				if getconnections then
 					for _, conn in ipairs(getconnections(RemoteEvent.OnClientEvent)) do
 						conn:Disconnect()
 					end
-					print("[Shutdown] RemoteEvent listeners disconnected.")
+					print("[Shutdown] RemoteEvent connections disconnected.")
 				end
 			end)
 
-			-- 🧵 Attempt to cancel any spawned coroutines created by this script
+			-- Cancel coroutines (safe in Delta)
 			pcall(function()
 				if getgc then
 					for _, obj in ipairs(getgc(true)) do
 						if type(obj) == "thread" then
-							-- Safely cancel threads spawned by this script if possible
 							task.cancel(obj)
 						end
 					end
-					print("[Shutdown] Any stray coroutines have been canceled.")
+					print("[Shutdown] Stray coroutines canceled.")
 				end
 			end)
 
-			-- 🧩 Destroy the GUI itself
+			-- Destroy GUI
 			gui:Destroy()
 			gui = nil
-
-			-- 🚮 Clear state
-			running = false
-			aborted = true
-			print("[Shutdown] GUI destroyed, variables cleared, script halted.")
+			print("[Shutdown] GUI destroyed, memory released.")
 		end
 	end
 end)
+
 
 
 

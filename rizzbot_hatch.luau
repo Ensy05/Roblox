@@ -3,7 +3,6 @@
 -- Delta Executor compatible
 
 return function(secretKey)
-    -- (Secret key currently unused — reserved for future verification)
     if secretKey then
         print("[RizzBot] Received external key: " .. tostring(secretKey))
     end
@@ -11,37 +10,30 @@ return function(secretKey)
     local Players = game:GetService("Players")
     local TextChatService = game:GetService("TextChatService")
 
-    local FOLDER = "RizzBot" -- will be created in workspace
+    local FOLDER = "RizzBot"
     local FILE_NAME = FOLDER .. "/ChatLog.txt"
     local DURATION = 20 -- seconds
 
-    -- Detect executor file API
     local has_isfile = type(isfile) == "function"
     local has_writefile = type(writefile) == "function"
     local has_appendfile = type(appendfile) == "function"
-    local has_readfile = type(readfile) == "function"
     local has_makefolder = type(makefolder) == "function"
 
     local connections = {}
     local chatMode = "Unknown"
 
-    -- Timestamp
     local function timestamp()
         return DateTime.now():ToIsoDate()
     end
 
-    -- Ensure folder and file exist
     local function ensure_path()
-        if has_makefolder then
-            pcall(function() makefolder(FOLDER) end)
-        end
+        if has_makefolder then pcall(function() makefolder(FOLDER) end) end
         if has_isfile and isfile(FILE_NAME) then return end
         if has_writefile then
             writefile(FILE_NAME, string.format("RizzBot chat log started %s\n", timestamp()))
         end
     end
 
-    -- Logging helper
     local function log(line)
         print(line)
         if has_appendfile then
@@ -51,7 +43,6 @@ return function(secretKey)
 
     ensure_path()
 
-    -- Hook TextChatService
     local function hook_textchat()
         local ok, conn = pcall(function()
             if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
@@ -71,7 +62,6 @@ return function(secretKey)
         return false
     end
 
-    -- Hook legacy chat
     local function hook_legacy()
         local function hook_player(plr)
             local conn = plr.Chatted:Connect(function(msg)
@@ -89,18 +79,15 @@ return function(secretKey)
         hook_legacy()
     end
 
-    -- Start logging notice
+    -- Only log once (no double print)
     local startMsg = string.format("RizzBot logging via %s for %d seconds... (Saved to %s)", chatMode, DURATION, FILE_NAME)
-    print(startMsg)
     log(startMsg)
 
-    -- Stop logging after DURATION
     task.delay(DURATION, function()
         for _, conn in ipairs(connections) do
             pcall(function() conn:Disconnect() end)
         end
         local stopMsg = string.format("RizzBot stopped logging after %d seconds. (Mode: %s)", DURATION, chatMode)
-        print(stopMsg)
         log(stopMsg)
     end)
 end

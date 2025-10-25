@@ -83,6 +83,11 @@ local function createTradeGui()
 	lfLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	lfLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+	-- Auto resize scroll area
+	lfLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		listFrame.CanvasSize = UDim2.new(0, 0, 0, lfLayout.AbsoluteContentSize.Y)
+	end)
+
 	-- Duration box
 	local durationBox = Instance.new("TextBox")
 	durationBox.Size = UDim2.new(0, 140, 0, 25)
@@ -147,8 +152,9 @@ local function createTradeGui()
 	local selectedPlayer = nil
 	local function refreshList()
 		for _, c in ipairs(listFrame:GetChildren()) do
-			if c:IsA("TextButton") then c:Destroy() end
+			if c:IsA("TextButton") or c:IsA("TextLabel") then c:Destroy() end
 		end
+
 		local others = 0
 		for _, plr in ipairs(Players:GetPlayers()) do
 			if plr ~= LocalPlayer then
@@ -169,6 +175,7 @@ local function createTradeGui()
 				end)
 			end
 		end
+
 		if others == 0 then
 			local label = Instance.new("TextLabel")
 			label.Size = UDim2.new(1, -4, 0, 25)
@@ -179,18 +186,29 @@ local function createTradeGui()
 			label.TextColor3 = Color3.fromRGB(200, 200, 200)
 			label.Parent = listFrame
 		end
+
+		listFrame.CanvasSize = UDim2.new(0, 0, 0, lfLayout.AbsoluteContentSize.Y)
 	end
 
-	task.defer(refreshList)
+	-- Refresh player list
+	task.defer(function()
+		refreshList()
+		task.wait(1)
+		refreshList()
+	end)
+
 	Players.PlayerAdded:Connect(refreshList)
 	Players.PlayerRemoving:Connect(refreshList)
 
+	-- Dropdown toggle
 	dropdown.MouseButton1Click:Connect(function()
 		refreshList()
+		task.wait()
 		listFrame.Visible = not listFrame.Visible
 		listFrame.ZIndex = 10
 	end)
 
+	-- Click outside to close
 	UserInputService.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			if listFrame.Visible and not listFrame:IsAncestorOf(input.Target) and input.Target ~= dropdown then

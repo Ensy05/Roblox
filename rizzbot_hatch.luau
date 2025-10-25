@@ -12,7 +12,7 @@ return function(secretKey)
 
     local FOLDER = "RizzBot"
     local FILE_NAME = FOLDER .. "/ChatLog.txt"
-    local DURATION = 20 -- seconds
+    local DURATION = secretKey -- seconds
 
     local has_isfile = type(isfile) == "function"
     local has_writefile = type(writefile) == "function"

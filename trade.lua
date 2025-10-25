@@ -12,14 +12,11 @@ local RemoteEvent = ReplicatedStorage:WaitForChild("Shared")
 	:WaitForChild("RemoteEvent")
 
 --// State
-local tradeStarted = false
-local aborted = false
-local running = false
-local gui -- forward declare for keybinds
+local running, aborted = false, false
+local gui
 
---// Helper: Create main UI
+--// Create GUI
 local function createTradeGui()
-	-- Prevent duplicates
 	if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("TradeMenuGui") then
 		LocalPlayer.PlayerGui.TradeMenuGui:Destroy()
 	end
@@ -31,20 +28,17 @@ local function createTradeGui()
 
 	-- Frame
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0, 300, 0, 255)
+	frame.Size = UDim2.new(0, 300, 0, 300)
 	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
 	frame.AnchorPoint = Vector2.new(0.5, 0.5)
 	frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 	frame.Parent = gui
 
-	local corner = Instance.new("UICorner")
+	local corner = Instance.new("UICorner", frame)
 	corner.CornerRadius = UDim.new(0, 12)
-	corner.Parent = frame
-
-	local stroke = Instance.new("UIStroke")
+	local stroke = Instance.new("UIStroke", frame)
 	stroke.Thickness = 1.5
 	stroke.Color = Color3.fromRGB(0, 255, 180)
-	stroke.Parent = frame
 
 	-- Title
 	local title = Instance.new("TextLabel")
@@ -54,73 +48,62 @@ local function createTradeGui()
 	title.TextColor3 = Color3.fromRGB(255, 255, 255)
 	title.BackgroundTransparency = 1
 	title.Size = UDim2.new(1, 0, 0, 30)
-	title.Position = UDim2.new(0, 0, 0, 5)
 	title.TextXAlignment = Enum.TextXAlignment.Center
-	title.TextYAlignment = Enum.TextYAlignment.Center
 	title.Parent = frame
 
-	-- Player label
-	local playerLabel = Instance.new("TextLabel")
-	playerLabel.Text = "Select:"
-	playerLabel.Font = Enum.Font.Gotham
-	playerLabel.TextSize = 14
-	playerLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	playerLabel.BackgroundTransparency = 1
-	playerLabel.Position = UDim2.new(0, 15, 0, 40)
-	playerLabel.Size = UDim2.new(0, 120, 0, 20)
-	playerLabel.Parent = frame
+	-- Player selection
+	local dropdownLabel = Instance.new("TextLabel")
+	dropdownLabel.Text = "Select Player:"
+	dropdownLabel.Font = Enum.Font.Gotham
+	dropdownLabel.TextSize = 14
+	dropdownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	dropdownLabel.BackgroundTransparency = 1
+	dropdownLabel.Position = UDim2.new(0, 15, 0, 35)
+	dropdownLabel.Parent = frame
 
-	-- Dropdown
 	local dropdown = Instance.new("TextButton")
 	dropdown.Size = UDim2.new(0, 260, 0, 25)
-	dropdown.Position = UDim2.new(0, 20, 0, 65)
+	dropdown.Position = UDim2.new(0, 20, 0, 60)
 	dropdown.Text = "Click to Select"
 	dropdown.Font = Enum.Font.Gotham
 	dropdown.TextSize = 14
 	dropdown.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
 	dropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
 	dropdown.Parent = frame
-
-	local ddCorner = Instance.new("UICorner")
+	local ddCorner = Instance.new("UICorner", dropdown)
 	ddCorner.CornerRadius = UDim.new(0, 6)
-	ddCorner.Parent = dropdown
 
 	-- Scrollable player list
 	local listFrame = Instance.new("ScrollingFrame")
-	listFrame.Size = UDim2.new(0, 260, 0, 100)
+	listFrame.Size = UDim2.new(0, 260, 0, 80)
 	listFrame.Position = UDim2.new(0, 20, 0, 90)
 	listFrame.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
-	listFrame.Visible = false
 	listFrame.ScrollBarThickness = 6
-	listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-	listFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
-	listFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	listFrame.Visible = false
 	listFrame.BorderSizePixel = 0
+	listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+	listFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	listFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
 	listFrame.Parent = frame
+	local lfCorner = Instance.new("UICorner", listFrame)
+	lfCorner.CornerRadius = UDim.new(0, 6)
+	local lfLayout = Instance.new("UIListLayout", listFrame)
+	lfLayout.Padding = UDim.new(0, 2)
+	lfLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-	local listCorner = Instance.new("UICorner")
-	listCorner.CornerRadius = UDim.new(0, 6)
-	listCorner.Parent = listFrame
-
-	local listLayout = Instance.new("UIListLayout")
-	listLayout.Parent = listFrame
-	listLayout.Padding = UDim.new(0, 2)
-	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-	-- Duration / interval
-	local durLabel = Instance.new("TextLabel")
-	durLabel.Text = "Duration (s):"
-	durLabel.Font = Enum.Font.Gotham
-	durLabel.TextSize = 14
-	durLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	durLabel.BackgroundTransparency = 1
-	durLabel.Position = UDim2.new(0, 15, 0, 200)
-	durLabel.Parent = frame
+	-- Duration field
+	local durationLabel = Instance.new("TextLabel")
+	durationLabel.Text = "Duration (s):"
+	durationLabel.Font = Enum.Font.Gotham
+	durationLabel.TextSize = 14
+	durationLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	durationLabel.BackgroundTransparency = 1
+	durationLabel.Position = UDim2.new(0, 15, 0, 180)
+	durationLabel.Parent = frame
 
 	local durationBox = Instance.new("TextBox")
 	durationBox.Size = UDim2.new(0, 100, 0, 25)
-	durationBox.Position = UDim2.new(0, 120, 0, 200)
+	durationBox.Position = UDim2.new(0, 120, 0, 180)
 	durationBox.PlaceholderText = "60"
 	durationBox.Text = ""
 	durationBox.Font = Enum.Font.Gotham
@@ -129,18 +112,19 @@ local function createTradeGui()
 	durationBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 	durationBox.Parent = frame
 
-	local intLabel = Instance.new("TextLabel")
-	intLabel.Text = "Interval (s):"
-	intLabel.Font = Enum.Font.Gotham
-	intLabel.TextSize = 14
-	intLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	intLabel.BackgroundTransparency = 1
-	intLabel.Position = UDim2.new(0, 15, 0, 135)
-	intLabel.Parent = frame
+	-- Interval field
+	local intervalLabel = Instance.new("TextLabel")
+	intervalLabel.Text = "Interval (s):"
+	intervalLabel.Font = Enum.Font.Gotham
+	intervalLabel.TextSize = 14
+	intervalLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	intervalLabel.BackgroundTransparency = 1
+	intervalLabel.Position = UDim2.new(0, 15, 0, 215)
+	intervalLabel.Parent = frame
 
 	local intervalBox = Instance.new("TextBox")
 	intervalBox.Size = UDim2.new(0, 100, 0, 25)
-	intervalBox.Position = UDim2.new(0, 120, 0, 135)
+	intervalBox.Position = UDim2.new(0, 120, 0, 215)
 	intervalBox.PlaceholderText = "2"
 	intervalBox.Text = ""
 	intervalBox.Font = Enum.Font.Gotham
@@ -152,35 +136,30 @@ local function createTradeGui()
 	-- Buttons
 	local startBtn = Instance.new("TextButton")
 	startBtn.Size = UDim2.new(0, 120, 0, 35)
-	startBtn.Position = UDim2.new(0, 25, 0, 175)
+	startBtn.Position = UDim2.new(0, 25, 0, 245)
 	startBtn.Text = "Start"
 	startBtn.Font = Enum.Font.GothamBold
 	startBtn.TextSize = 16
 	startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	startBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
 	startBtn.Parent = frame
+	Instance.new("UICorner", startBtn).CornerRadius = UDim.new(0, 8)
 
 	local cancelBtn = Instance.new("TextButton")
 	cancelBtn.Size = UDim2.new(0, 120, 0, 35)
-	cancelBtn.Position = UDim2.new(0, 155, 0, 175)
+	cancelBtn.Position = UDim2.new(0, 155, 0, 245)
 	cancelBtn.Text = "Cancel"
 	cancelBtn.Font = Enum.Font.GothamBold
 	cancelBtn.TextSize = 16
 	cancelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	cancelBtn.BackgroundColor3 = Color3.fromRGB(170, 60, 60)
 	cancelBtn.Parent = frame
+	Instance.new("UICorner", cancelBtn).CornerRadius = UDim.new(0, 8)
 
-	local uiCorner1 = Instance.new("UICorner")
-	uiCorner1.CornerRadius = UDim.new(0, 8)
-	uiCorner1.Parent = startBtn
-	local uiCorner2 = Instance.new("UICorner")
-	uiCorner2.CornerRadius = UDim.new(0, 8)
-	uiCorner2.Parent = cancelBtn
-
-	-- Status Label
+	-- Status label
 	local statusLabel = Instance.new("TextLabel")
 	statusLabel.Size = UDim2.new(1, -20, 0, 20)
-	statusLabel.Position = UDim2.new(0, 10, 0, 220)
+	statusLabel.Position = UDim2.new(0, 10, 0, 280)
 	statusLabel.Font = Enum.Font.Gotham
 	statusLabel.TextSize = 14
 	statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -190,10 +169,8 @@ local function createTradeGui()
 	statusLabel.TextYAlignment = Enum.TextYAlignment.Center
 	statusLabel.Parent = frame
 
-	-- State
+	-- Player list logic
 	local selectedPlayer = nil
-
-	-- Populate player list
 	local function refreshList()
 		for _, c in ipairs(listFrame:GetChildren()) do
 			if c:IsA("TextButton") then c:Destroy() end
@@ -207,11 +184,7 @@ local function createTradeGui()
 				btn.Font = Enum.Font.Gotham
 				btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 				btn.Parent = listFrame
-
-				local btnCorner = Instance.new("UICorner")
-				btnCorner.CornerRadius = UDim.new(0, 4)
-				btnCorner.Parent = btn
-
+				Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 				btn.MouseButton1Click:Connect(function()
 					selectedPlayer = plr
 					dropdown.Text = "Selected: " .. plr.Name
@@ -220,17 +193,15 @@ local function createTradeGui()
 			end
 		end
 	end
-
 	refreshList()
 	Players.PlayerAdded:Connect(refreshList)
 	Players.PlayerRemoving:Connect(refreshList)
 
-	-- Dropdown toggle
 	dropdown.MouseButton1Click:Connect(function()
 		listFrame.Visible = not listFrame.Visible
+		listFrame.ZIndex = 10
 	end)
 
-	-- Close dropdown when clicking elsewhere
 	UserInputService.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			if listFrame.Visible and not listFrame:IsAncestorOf(input.Target) and input.Target ~= dropdown then
@@ -246,29 +217,23 @@ local function createTradeGui()
 			statusLabel.Text = "⚠️ Select a player first!"
 			return
 		end
-
 		local totalTime = tonumber(durationBox.Text) or 60
 		local interval = tonumber(intervalBox.Text) or 2
 		local loops = math.floor(totalTime / interval)
-
-		running = true
-		aborted = false
-		tradeStarted = false
-
+		running, aborted = true, false
 		startBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-		statusLabel.Text = string.format("🟢 Running (%ds / %.1fs interval)", totalTime, interval)
+		statusLabel.Text = string.format("🟢 Running (%d loops)", loops)
 
 		task.spawn(function()
 			for i = 1, loops do
 				if aborted then break end
 				RemoteEvent:FireServer("TradeRequest", selectedPlayer)
-				statusLabel.Text = string.format("🟢 Running (%d/%d)", i, loops)
+				statusLabel.Text = string.format("🟢 Loop %d/%d", i, loops)
 				for _ = 1, math.floor(interval * 10) do
 					if aborted then break end
 					task.wait(0.1)
 				end
 			end
-
 			if aborted then
 				statusLabel.Text = "🔴 Aborted."
 			else
@@ -293,7 +258,7 @@ end
 
 createTradeGui()
 
---// Keybinds
+-- Keybinds
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 	if input.KeyCode == Enum.KeyCode.RightShift then

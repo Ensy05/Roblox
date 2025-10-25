@@ -77,13 +77,25 @@ local function createTradeGui()
 	listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 	listFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	listFrame.VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar
+	listFrame.ZIndex = 5 -- ensures scrollbar is drawn on top
 	listFrame.Parent = frame
+	
 	local lfCorner = Instance.new("UICorner", listFrame)
 	lfCorner.CornerRadius = UDim.new(0, 6)
+	
 	local lfLayout = Instance.new("UIListLayout", listFrame)
 	lfLayout.Padding = UDim.new(0, 2)
 	lfLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	lfLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	
+	lfLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+		listFrame.CanvasSize = UDim2.new(0, 0, 0, lfLayout.AbsoluteContentSize.Y)
+		for _, child in ipairs(listFrame:GetChildren()) do
+			if child:IsA("GuiObject") then
+				child.ZIndex = 6 -- 👈 child buttons above even higher
+			end
+		end
+	end)
 
 	lfLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		listFrame.CanvasSize = UDim2.new(0, 0, 0, lfLayout.AbsoluteContentSize.Y)
@@ -170,6 +182,7 @@ local function createTradeGui()
 				btn.TextSize = 14
 				btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 				btn.Parent = listFrame
+				btn.ZIndex = 6
 				Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 				btn.MouseButton1Click:Connect(function()
 					selectedPlayer = plr
@@ -323,3 +336,4 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+

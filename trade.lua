@@ -96,7 +96,7 @@ local function createTradeGui()
 
 	local intervalBox = Instance.new("TextBox")
 	intervalBox.Size = UDim2.new(0, 140, 0, 25)
-	intervalBox.Position = UDim2.new(0, 80, 0, 140)
+	intervalBox.Position = UDim2.new(0, 80, 0, 130)
 	intervalBox.PlaceholderText = "Interval (s)"
 	intervalBox.Text = ""
 	intervalBox.Font = Enum.Font.Gotham
@@ -108,7 +108,7 @@ local function createTradeGui()
 	-- Buttons
 	local startBtn = Instance.new("TextButton")
 	startBtn.Size = UDim2.new(0, 120, 0, 35)
-	startBtn.Position = UDim2.new(0, 25, 0, 180)
+	startBtn.Position = UDim2.new(0, 25, 0, 170)
 	startBtn.Text = "Start"
 	startBtn.Font = Enum.Font.GothamBold
 	startBtn.TextSize = 16
@@ -119,7 +119,7 @@ local function createTradeGui()
 
 	local cancelBtn = Instance.new("TextButton")
 	cancelBtn.Size = UDim2.new(0, 120, 0, 35)
-	cancelBtn.Position = UDim2.new(0, 155, 0, 130)
+	cancelBtn.Position = UDim2.new(0, 155, 0, 170)
 	cancelBtn.Text = "Cancel"
 	cancelBtn.Font = Enum.Font.GothamBold
 	cancelBtn.TextSize = 16
@@ -131,7 +131,7 @@ local function createTradeGui()
 	-- Status label
 	local statusLabel = Instance.new("TextLabel")
 	statusLabel.Size = UDim2.new(1, -20, 0, 20)
-	statusLabel.Position = UDim2.new(0, 10, 0, 230)
+	statusLabel.Position = UDim2.new(0, 10, 0, 215)
 	statusLabel.Font = Enum.Font.Gotham
 	statusLabel.TextSize = 14
 	statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -248,6 +248,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+
 
 
 

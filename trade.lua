@@ -273,26 +273,6 @@ local function createTradeGui()
 		statusLabel.Text = string.format("🟢 Running (%d loops)", loops)
 
 		-- Safe trade acceptance detector (non-blocking)
-			
-		local tradeListener
-		tradeListener = RemoteEvent.OnClientEvent:Connect(function(action, data)
-			if not running or aborted then return end
-			if action ~= "TradeUpdated" or type(data) ~= "table" then return end
-		
-			local p0, p1 = data.Party0, data.Party1
-			if not (p0 and p1) then return end
-		
-			-- Only proceed if both players have actually accepted/confirmed
-			local bothAccepted =
-				(p0.Accepted or p0.Confirmed) and
-				(p1.Accepted or p1.Confirmed)
-		
-			if bothAccepted then
-				print("[TradeDetector] ✅ Trade completed — stopping loop.")
-				statusLabel.Text = "✅ Trade accepted — stopping..."
-				aborted = true
-			end
-		end)
 
 		task.spawn(function()
 			for i = 1, loops do
@@ -302,39 +282,32 @@ local function createTradeGui()
 					statusLabel.Text = "⚠️ Player left or invalid!"
 					break
 				end
-
+		
 				local ok, err = pcall(function()
 					RemoteEvent:FireServer("TradeRequest", selectedPlayer)
 				end)
-
+		
 				if not ok then
 					print("[TradeLoop] Trade error:", err)
 					statusLabel.Text = "⚠️ Trade error: " .. tostring(err)
 					break
 				end
-
+		
 				statusLabel.Text = string.format("🟢 Loop %d/%d", i, loops)
 				print(string.format("[TradeLoop] Loop %d/%d successful", i, loops))
 				task.wait(interval)
 			end
-
+		
 			if aborted then
-				print("[TradeLoop] Aborted manually or by trade accept.")
+				print("[TradeLoop] Aborted manually.")
 				statusLabel.Text = "🔴 Aborted."
 			else
 				print("[TradeLoop] Finished all loops successfully.")
 				statusLabel.Text = "✅ Done."
 			end
-
+		
 			startBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
 			running = false
-
-			-- ✅ Cleanup listener after loop ends
-			if tradeListener then
-				tradeListener:Disconnect()
-				tradeListener = nil
-				print("[TradeDetector] Disconnected listener.")
-			end
 		end)
 	end)
 
@@ -412,3 +385,4 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+

@@ -27,7 +27,6 @@ local function createTradeGui()
 	gui.Name = "TradeMenuGui"
 	gui.ResetOnSpawn = false
 	gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-	print("[TradeGUI] Created ScreenGui")
 
 	-- Frame
 	local frame = Instance.new("Frame")
@@ -166,7 +165,6 @@ local function createTradeGui()
 	-- Player list logic
 	local selectedPlayer = nil
 	local function refreshList()
-		print("[PlayerList] Refreshing list...")
 		for _, c in ipairs(listFrame:GetChildren()) do
 			if c:IsA("TextButton") or c:IsA("TextLabel") then c:Destroy() end
 		end
@@ -175,7 +173,6 @@ local function createTradeGui()
 		for _, plr in ipairs(Players:GetPlayers()) do
 			if plr ~= LocalPlayer then
 				others += 1
-				print("[PlayerList] Found player:", plr.Name)
 				local btn = Instance.new("TextButton")
 				btn.Size = UDim2.new(1, -4, 0, 25)
 				btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
@@ -188,7 +185,6 @@ local function createTradeGui()
 				Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 				btn.MouseButton1Click:Connect(function()
 					selectedPlayer = plr
-					print("[PlayerList] Selected player:", plr.Name)
 					dropdown.Text = "Selected: " .. plr.Name
 					listFrame.Visible = false
 				end)
@@ -196,7 +192,6 @@ local function createTradeGui()
 		end
 
 		if others == 0 then
-			print("[PlayerList] No other players found.")
 			local label = Instance.new("TextLabel")
 			label.Size = UDim2.new(1, -4, 0, 25)
 			label.Text = "(no other players)"
@@ -208,35 +203,28 @@ local function createTradeGui()
 		end
 
 		listFrame.CanvasSize = UDim2.new(0, 0, 0, lfLayout.AbsoluteContentSize.Y)
-		print("[PlayerList] Refresh complete, total:", others)
 	end
 
 	-- Refresh player list
 	task.defer(function()
-		print("[TradeGUI] Initial list refresh...")
 		refreshList()
 		task.wait(1)
-		print("[TradeGUI] Second list refresh after delay")
 		refreshList()
 	end)
 
 	table.insert(connections, Players.PlayerAdded:Connect(function(plr)
-		print("[PlayerList] Player joined:", plr.Name)
 		refreshList()
 	end))
 
 	table.insert(connections, Players.PlayerRemoving:Connect(function(plr)
-		print("[PlayerList] Player left:", plr.Name)
 		refreshList()
 	end))
 
 	-- Dropdown toggle
 	dropdown.MouseButton1Click:Connect(function()
-		print("[Dropdown] Clicked, refreshing and toggling visibility")
 		refreshList()
 		task.wait()
 		listFrame.Visible = not listFrame.Visible
-		print("[Dropdown] ListFrame.Visible =", listFrame.Visible)
 	end)
 
 	-- Click outside to close
@@ -244,7 +232,6 @@ local function createTradeGui()
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			if listFrame.Visible and not listFrame:IsAncestorOf(input.Target) and input.Target ~= dropdown then
 				listFrame.Visible = false
-				print("[Dropdown] Click outside detected, hiding list")
 			end
 		end
 	end)
@@ -252,11 +239,9 @@ local function createTradeGui()
 	-- Start button
 	startBtn.MouseButton1Click:Connect(function()
 		if running then
-			print("[TradeLoop] Already running, ignoring Start click")
 			return
 		end
 		if not selectedPlayer then
-			print("[TradeLoop] Tried to start with no player selected")
 			statusLabel.Text = "⚠️ Select a player first!"
 			return
 		end
@@ -266,7 +251,6 @@ local function createTradeGui()
 		local totalTime = tonumber(durationBox.Text) or 60
 		local interval = tonumber(intervalBox.Text) or 2
 		local loops = math.floor(totalTime / interval)
-		print(string.format("[TradeLoop] Starting for %d seconds (%d loops, %.1fs interval)", totalTime, loops, interval))
 
 		running, aborted = true, false
 		startBtn.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
@@ -278,7 +262,6 @@ local function createTradeGui()
 			for i = 1, loops do
 				if aborted then break end
 				if not selectedPlayer or selectedPlayer.Parent ~= Players then
-					print("[TradeLoop] Player left or invalid, aborting.")
 					statusLabel.Text = "⚠️ Player left or invalid!"
 					break
 				end
@@ -288,21 +271,17 @@ local function createTradeGui()
 				end)
 		
 				if not ok then
-					print("[TradeLoop] Trade error:", err)
 					statusLabel.Text = "⚠️ Trade error: " .. tostring(err)
 					break
 				end
 		
 				statusLabel.Text = string.format("🟢 Loop %d/%d", i, loops)
-				print(string.format("[TradeLoop] Loop %d/%d successful", i, loops))
 				task.wait(interval)
 			end
 		
 			if aborted then
-				print("[TradeLoop] Aborted manually.")
 				statusLabel.Text = "🔴 Aborted."
 			else
-				print("[TradeLoop] Finished all loops successfully.")
 				statusLabel.Text = "✅ Done."
 			end
 		
@@ -314,7 +293,6 @@ local function createTradeGui()
 	-- Cancel button
 	cancelBtn.MouseButton1Click:Connect(function()
 		if running then
-			print("[TradeLoop] Cancel pressed.")
 			aborted = true
 			statusLabel.Text = "🔴 Cancelling..."
 			cancelBtn.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
@@ -333,7 +311,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 	if input.KeyCode == Enum.KeyCode.RightShift then
 		if gui then
 			gui.Enabled = not gui.Enabled
-			print(gui.Enabled and "[Keybind] GUI shown" or "[Keybind] GUI hidden")
 		end
 
 	elseif input.KeyCode == Enum.KeyCode.BackSlash then
@@ -363,5 +340,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+
 
 

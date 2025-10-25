@@ -28,7 +28,7 @@ local function createTradeGui()
 
 	-- Frame
 	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0, 300, 0, 300)
+	frame.Size = UDim2.new(0, 300, 0, 240)
 	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
 	frame.AnchorPoint = Vector2.new(0.5, 0.5)
 	frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
@@ -50,16 +50,6 @@ local function createTradeGui()
 	title.Size = UDim2.new(1, 0, 0, 30)
 	title.TextXAlignment = Enum.TextXAlignment.Center
 	title.Parent = frame
-
-	-- Player selection
-	local dropdownLabel = Instance.new("TextLabel")
-	dropdownLabel.Text = "Select Player:"
-	dropdownLabel.Font = Enum.Font.Gotham
-	dropdownLabel.TextSize = 14
-	dropdownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	dropdownLabel.BackgroundTransparency = 1
-	dropdownLabel.Position = UDim2.new(0, 15, 0, 35)
-	dropdownLabel.Parent = frame
 
 	local dropdown = Instance.new("TextButton")
 	dropdown.Size = UDim2.new(0, 260, 0, 25)
@@ -91,20 +81,10 @@ local function createTradeGui()
 	lfLayout.Padding = UDim.new(0, 2)
 	lfLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-	-- Duration field
-	local durationLabel = Instance.new("TextLabel")
-	durationLabel.Text = "Duration (s):"
-	durationLabel.Font = Enum.Font.Gotham
-	durationLabel.TextSize = 14
-	durationLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	durationLabel.BackgroundTransparency = 1
-	durationLabel.Position = UDim2.new(0, 15, 0, 180)
-	durationLabel.Parent = frame
-
 	local durationBox = Instance.new("TextBox")
 	durationBox.Size = UDim2.new(0, 100, 0, 25)
-	durationBox.Position = UDim2.new(0, 120, 0, 180)
-	durationBox.PlaceholderText = "60"
+	durationBox.Position = UDim2.new(0, 120, 0, 100)
+	durationBox.PlaceholderText = "Duration (s)"
 	durationBox.Text = ""
 	durationBox.Font = Enum.Font.Gotham
 	durationBox.TextSize = 14
@@ -113,19 +93,11 @@ local function createTradeGui()
 	durationBox.Parent = frame
 
 	-- Interval field
-	local intervalLabel = Instance.new("TextLabel")
-	intervalLabel.Text = "Interval (s):"
-	intervalLabel.Font = Enum.Font.Gotham
-	intervalLabel.TextSize = 14
-	intervalLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	intervalLabel.BackgroundTransparency = 1
-	intervalLabel.Position = UDim2.new(0, 15, 0, 215)
-	intervalLabel.Parent = frame
 
 	local intervalBox = Instance.new("TextBox")
-	intervalBox.Size = UDim2.new(0, 100, 0, 25)
-	intervalBox.Position = UDim2.new(0, 120, 0, 215)
-	intervalBox.PlaceholderText = "2"
+	intervalBox.Size = UDim2.new(0, 140, 0, 25)
+	intervalBox.Position = UDim2.new(0, 120, 0, 140)
+	intervalBox.PlaceholderText = "Interval (s)"
 	intervalBox.Text = ""
 	intervalBox.Font = Enum.Font.Gotham
 	intervalBox.TextSize = 14
@@ -135,8 +107,8 @@ local function createTradeGui()
 
 	-- Buttons
 	local startBtn = Instance.new("TextButton")
-	startBtn.Size = UDim2.new(0, 120, 0, 35)
-	startBtn.Position = UDim2.new(0, 25, 0, 245)
+	startBtn.Size = UDim2.new(0, 140, 0, 35)
+	startBtn.Position = UDim2.new(0, 25, 0, 180)
 	startBtn.Text = "Start"
 	startBtn.Font = Enum.Font.GothamBold
 	startBtn.TextSize = 16
@@ -147,7 +119,7 @@ local function createTradeGui()
 
 	local cancelBtn = Instance.new("TextButton")
 	cancelBtn.Size = UDim2.new(0, 120, 0, 35)
-	cancelBtn.Position = UDim2.new(0, 155, 0, 245)
+	cancelBtn.Position = UDim2.new(0, 155, 0, 180)
 	cancelBtn.Text = "Cancel"
 	cancelBtn.Font = Enum.Font.GothamBold
 	cancelBtn.TextSize = 16
@@ -159,7 +131,7 @@ local function createTradeGui()
 	-- Status label
 	local statusLabel = Instance.new("TextLabel")
 	statusLabel.Size = UDim2.new(1, -20, 0, 20)
-	statusLabel.Position = UDim2.new(0, 10, 0, 280)
+	statusLabel.Position = UDim2.new(0, 10, 0, 230)
 	statusLabel.Font = Enum.Font.Gotham
 	statusLabel.TextSize = 14
 	statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -184,7 +156,9 @@ local function createTradeGui()
 				btn.Font = Enum.Font.Gotham
 				btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 				btn.Parent = listFrame
-				Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+				local btnCorner = Instance.new("UICorner")
+				btnCorner.CornerRadius = UDim.new(0, 4)
+				btnCorner.Parent = btn
 				btn.MouseButton1Click:Connect(function()
 					selectedPlayer = plr
 					dropdown.Text = "Selected: " .. plr.Name
@@ -274,3 +248,4 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+

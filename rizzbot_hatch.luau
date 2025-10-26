@@ -10,7 +10,6 @@ return function(AUTH_KEY)
     -- Settings
     local URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/"
     local matchUsername = false
-    local minSMTierThreeRarity = 2.5e-07 -- 1 in 4 Million
 
     local hexDict = {
         ["#ff0064"] = "nil",
@@ -87,7 +86,7 @@ return function(AUTH_KEY)
             rarity = "Secret"
         end
 
-        if rarity ~= "Secret" or (baseChance > minSMTierThreeRarity and variant ~= "Shiny Mythic") then
+        if rarity ~= "Secret" then
             return
         end
 

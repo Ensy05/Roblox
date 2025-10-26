@@ -137,17 +137,10 @@ return function(AUTH_KEY)
         end
     end
 
-    print("Testing Webhook...")
-    local testText = [[🎉 <b><font color="#a2ebff">LDstroiR</font> just hatched a <font color="#00ff02">Shiny Mythic Angelic Skull (2.5e-12%)</font></b>]]
-    local testData = findHatch(testText, "LDstroiR")
-    print(testData)
-    if testData ~= nil then
-        sendWebhook(testData)
-    end
-
 	-- Connection handler
 	local connection = TextChatService.MessageReceived:Connect(function(message)
 		local text = message.Text
+		print(text)
 		local data = findHatch(text, userId)
         if data ~= nil then
             sendWebhook(data)

@@ -103,6 +103,12 @@ return function(AUTH_KEY)
             ["rarity"] = rarity
         }
 
+        print(returnDict["player"])
+        print(returnDict["pet"])
+        print(returnDict["variant"])
+        print(returnDict["chance"])
+        print(returnDict["rarity"])
+
         return returnDict
     end
 

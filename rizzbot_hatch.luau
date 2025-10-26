@@ -8,6 +8,7 @@ return function(AUTH_KEY)
     local HttpService = game:GetService("HttpService")
 
     -- Settings
+    local URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/"
     local matchUsername = true
     local minSMTierThreeRarity = 2.5e-07 -- 1 in 4 Million
 
@@ -108,39 +109,40 @@ return function(AUTH_KEY)
         return returnDict
     end
 
-    local function uploadMessage(data)
-        local json = HttpService:JSONEncode(data)
-
-        local success, result = pcall(function()
-            -- Build URL safely inside the call to avoid "vulnerable function"
-            local safeURL = string.format(
-                "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload?key=%s",
-                HttpService:UrlEncode(AUTH_KEY)
-            )
-
-            return HttpService:PostAsync(
-                safeURL,
-                json,
-                Enum.HttpContentType.ApplicationJson,
-                false
-            )
+    local function sendWebhook(payload)
+        local ok, res = pcall(function()
+            return HttpService:RequestAsync({
+                Url = URL,
+                Method = "POST",
+                Headers = {
+                    ["Authorization"] = AUTH_KEY,
+                    ["Content-Type"] = "application/json"
+                },
+                Body = HttpService:JSONEncode(payload)
+            })
         end)
 
-        if not success then
-            warn("[RizzBot] Upload failed:", result)
+        if not ok then
+            warn("[Webhook] RequestAsync failed:", res)
+            return false, res
+        end
+
+        -- res is a table with StatusCode, Body, Headers
+        if res.Success and (res.StatusCode == 200 or res.StatusCode == 201) then
+            print("WEBHOOK Post sent for ", payload.pet)
+            return true, res
         else
-            print("[RizzBot] Upload success:", result)
+            warn("[Webhook] Non-OK response:", res.StatusCode, res.Body)
+            return false, res
         end
     end
-
-
 
     print("Testing Webhook...")
     local testText = [[🎉 <b><font color="#a2ebff">LDstroiR</font> just hatched a <font color="#00ff02">Shiny Mythic Angelic Skull (2.5e-12%)</font></b>]]
     local testData = findHatch(testText, "LDstroiR")
     print(testData)
     if testData ~= nil then
-        uploadMessage(testData)
+        sendWebhook(testData)
     end
 
 	-- Connection handler
@@ -148,7 +150,7 @@ return function(AUTH_KEY)
 		local text = message.Text
 		local data = findHatch(text, userId)
         if data ~= nil then
-            uploadMessage(data)
+            sendWebhook(data)
         end
 	end)
 

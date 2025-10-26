@@ -134,7 +134,6 @@ return function(AUTH_KEY)
 	-- Connection handler
 	local connection = TextChatService.MessageReceived:Connect(function(message)
 		local text = message.Text
-		print(text)
 		local data = findHatch(text, userId)
         if data ~= nil then
             sendWebhook(data)

@@ -12,7 +12,9 @@ return function(AUTH_KEY)
     local minSMTierThreeRarity = 2.5e-07 -- 1 in 4 Million
 
     -- Constants
-    local UPLOAD_URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload"
+    local BASE_URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload"
+    local UPLOAD_URL = BASE_URL .. "?key=" .. game:GetService("HttpService"):UrlEncode(AUTH_KEY)
+
     local hexDict = {
         ["#ff0064"] = "nil",
         ["#e3ff00"] = "Shiny",
@@ -40,7 +42,7 @@ return function(AUTH_KEY)
 
     if matchUsername then
 	    local Players = game:GetService("Players")
-        userId = Players.LocalPlayer
+        userId = Players.LocalPlayer.Name
     end
 
     local function findHatch(text, userId)
@@ -54,7 +56,7 @@ return function(AUTH_KEY)
         local offset = 31 -- Holds the total offset the string will have.
         local foundUserId = text:sub(offset, offset + 20):match("([^<]+)") -- Verify that the userId matches if it exists.
 
-        if userId ~= nil and foundUserId ~= foundUserId then
+        if userId ~= nil and foundUserId ~= userId then
             return nil
         end
 
@@ -105,24 +107,24 @@ return function(AUTH_KEY)
     end
 
     local function uploadMessage(data)
-		local json = HttpService:JSONEncode(data)
+        local json = HttpService:JSONEncode(data)
 
-		local success, result = pcall(function()
-			return HttpService:PostAsync(
-				UPLOAD_URL,
-				json,
-				Enum.HttpContentType.ApplicationJson,
-				false, -- no compress
-				{
-					["Authorization"] = AUTH_KEY
-				}
-			)
-		end)
+        local success, result = pcall(function()
+            return HttpService:PostAsync(
+                UPLOAD_URL,                      -- now includes ?key=AUTH_KEY
+                json,
+                Enum.HttpContentType.ApplicationJson,
+                false -- no compression
+            )
+        end)
 
-		if not success then
-			warn("[RizzBot] Upload failed:", result)
-		end
-	end
+        if not success then
+            warn("[RizzBot] Upload failed:", result)
+        else
+            print("[RizzBot] Upload success:", result)
+        end
+    end
+
 
     print("Testing Webhook...")
     local testText = [[🎉 <b><font color="#a2ebff">LDstroiR</font> just hatched a <font color="#00ff02">Shiny Mythic Angelic Skull (2.5e-12%)</font></b>]]

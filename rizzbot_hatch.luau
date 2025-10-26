@@ -8,7 +8,7 @@ return function(AUTH_KEY)
     local HttpService = game:GetService("HttpService")
 
     -- Settings
-    local URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/"
+    local URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload"
     local matchUsername = false
 
     local hexDict = {

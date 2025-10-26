@@ -8,8 +8,8 @@ return function(AUTH_KEY)
     local HttpService = game:GetService("HttpService")
 
     -- Settings
-    local URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload"
-    local matchUsername = false
+    local URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/"
+    local matchUsername = true
     local minSMTierThreeRarity = 2.5e-07 -- 1 in 4 Million
 
     local hexDict = {
@@ -42,19 +42,19 @@ return function(AUTH_KEY)
         userId = Players.LocalPlayer.Name
     end
 
-    local function findHatch(text, userId)
+    local function findHatch(text)
         text = text:sub(1, -14)
 
         -- Check for valid starting char
         if utf8.char(utf8.codepoint(text, 1)) ~= "🎉" then
-            return nil
+            return
         end
 
         local offset = 31 -- Holds the total offset the string will have.
         local foundUserId = text:sub(offset, offset + 20):match("([^<]+)") -- Verify that the userId matches if it exists.
 
-        if userId ~= nil and foundUserId ~= userId then
-            return nil
+        if userId ~= nil and userId ~= foundUserId then
+            return
         end
 
         offset = offset + string.len(foundUserId) + 36 -- Offset to account for username length
@@ -62,18 +62,18 @@ return function(AUTH_KEY)
         local variant = hexDict[hexCode]
 
         if variant == nil then
-            return nil
+            return
         end
 
         if variant ~= "nil" then
             offset = offset + string.len(variant) + 1
         end
 
+
         offset = offset + 9
         local petName = text:sub(offset):match("([%w%s]+)%(")
-
         if petName == nil then
-            return nil
+            return
         end
 
         petName = petName:sub(1, -2)
@@ -83,12 +83,12 @@ return function(AUTH_KEY)
         local baseChance = chance * multiDict[variant]
 
         local rarity = "Legendary"
-        if baseChance <= 1/20000000 then
+        if baseChance <= 5e-08 then
             rarity = "Secret"
         end
 
-        if rarity ~= "Secret" or not (variant == "Shiny Mythic" and baseChance <= minSMTierThreeRarity) then
-            return nil
+        if rarity ~= "Secret" or (baseChance > minSMTierThreeRarity and variant ~= "Shiny Mythic") then
+            return
         end
 
         local returnDict = {
@@ -134,7 +134,7 @@ return function(AUTH_KEY)
 	-- Connection handler
 	local connection = TextChatService.MessageReceived:Connect(function(message)
 		local text = message.Text
-		local data = findHatch(text, userId)
+		local data = findHatch(text)
         if data ~= nil then
             sendWebhook(data)
         end

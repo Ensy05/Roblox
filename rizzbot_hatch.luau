@@ -1,93 +1,143 @@
--- RizzBot: capture chat for 20 seconds, then stop
--- Compatible with TextChatService and legacy Player.Chatted
--- Delta Executor compatible
+-- RizzBot: Chat feed (TextChatService only)
+-- Lightweight version for use with loadstring(AUTH_KEY)
+-- Forwards chat messages to RizzBot
 
-return function(secretKey)
-    if secretKey then
-        print("[RizzBot] Received external key: " .. tostring(secretKey))
-    end
-
-    local Players = game:GetService("Players")
+return function(AUTH_KEY)
+    -- Server Constants
     local TextChatService = game:GetService("TextChatService")
 
-    local FOLDER = "RizzBot"
-    local FILE_NAME = FOLDER .. "/ChatLog.txt"
-    local DURATION = secretKey -- seconds
+    -- Settings
+    local matchUsername = true
+    local minSMTierThreeRarity = 2.5e-07 -- 1 in 4 Million
 
-    local has_isfile = type(isfile) == "function"
-    local has_writefile = type(writefile) == "function"
-    local has_appendfile = type(appendfile) == "function"
-    local has_makefolder = type(makefolder) == "function"
+    -- Constants
+    local UPLOAD_URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload"
+    local hexDict = {
+        ["#ff0064"] = "nil",
+        ["#e3ff00"] = "Shiny",
+        ["#ff8200"] = "Mythic",
+        ["#00ff02"] = "Shiny Mythic"
+    }
 
-    local connections = {}
-    local chatMode = "Unknown"
+    local multiDict = {
+        ["nil"] = 1,
+        ["Shiny"] = 40,
+        ["Mythic"] = 100,
+        ["Shiny Mythic"] = 4000
+    }
 
-    local function timestamp()
-        return DateTime.now():ToIsoDate()
+    -- Variables
+    local userId = nil
+
+	-- External key support
+	if AUTH_KEY then
+		print("[RizzBot] External key received:", AUTH_KEY)
+    else
+        print("[RizzBot] Key not recieved, exiting")
+        return
+	end
+
+    if matchUsername then
+	    local Players = game:GetService("Players")
+        userId = Players.LocalPlayer
     end
 
-    local function ensure_path()
-        if has_makefolder then pcall(function() makefolder(FOLDER) end) end
-        if has_isfile and isfile(FILE_NAME) then return end
-        if has_writefile then
-            writefile(FILE_NAME, string.format("RizzBot chat log started %s\n", timestamp()))
+    local function findHatch(text, userId)
+        text = text:sub(1, -14)
+
+        -- Check for valid starting char
+        if utf8.char(utf8.codepoint(text, 1)) ~= "🎉" then
+            return
         end
-    end
 
-    local function log(line)
-        print(line)
-        if has_appendfile then
-            appendfile(FILE_NAME, line .. "\n")
+        local offset = 31 -- Holds the total offset the string will have.
+        local foundUserId = text:sub(offset, offset + 20):match("([^<]+)") -- Verify that the userId matches if it exists.
+
+        if userId ~= nil and foundUserId ~= foundUserId then
+            return
         end
-    end
 
-    ensure_path()
+        offset = offset + string.len(foundUserId) + 36 -- Offset to account for username length
+        local hexCode = text:sub(offset, offset + 6)
+        local variant = hexDict[hexCode]
 
-    local function hook_textchat()
-        local ok, conn = pcall(function()
-            if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-                conn = TextChatService.MessageReceived:Connect(function(msg)
-                    local author = (msg.TextSource and msg.TextSource.Name) or "System"
-                    local out = string.format("[%s] %s: %s", timestamp(), author, msg.Text)
-                    log(out)
-                end)
-                chatMode = "TextChatService"
-                return conn
-            end
-        end)
-        if ok and conn then
-            table.insert(connections, conn)
-            return true
+        if variant == nil then
+            return
         end
-        return false
-    end
 
-    local function hook_legacy()
-        local function hook_player(plr)
-            local conn = plr.Chatted:Connect(function(msg)
-                local out = string.format("[%s] %s: %s", timestamp(), plr.Name, msg)
-                log(out)
-            end)
-            table.insert(connections, conn)
+        if variant ~= "nil" then
+            offset = offset + string.len(variant) + 1
         end
-        for _, plr in ipairs(Players:GetPlayers()) do hook_player(plr) end
-        table.insert(connections, Players.PlayerAdded:Connect(hook_player))
-        chatMode = "LegacyChat"
-    end
 
-    if not hook_textchat() then
-        hook_legacy()
-    end
+        offset = offset + 9
+        local petName = text:sub(offset):match("([%w%s]+)%(")
 
-    -- Only log once (no double print)
-    local startMsg = string.format("RizzBot logging via %s for %d seconds... (Saved to %s)", chatMode, DURATION, FILE_NAME)
-    log(startMsg)
-
-    task.delay(DURATION, function()
-        for _, conn in ipairs(connections) do
-            pcall(function() conn:Disconnect() end)
+        if petName == nil then
+            return
         end
-        local stopMsg = string.format("RizzBot stopped logging after %d seconds. (Mode: %s)", DURATION, chatMode)
-        log(stopMsg)
-    end)
+
+        petName = petName:sub(1, -2)
+        offset = offset + string.len(petName) + 2
+
+        local chance = tonumber(text:sub(offset)) / 100
+        local baseChance = chance * multiDict[variant]
+
+        local rarity = "Legendary"
+        if baseChance <= 1/20000000 then
+            rarity = "Secret"
+        end
+
+        if rarity ~= "Secret" or not (variant == "Shiny Mythic" and baseChance <= minSMTierThreeRarity) then
+            return
+        end
+
+        local returnDict = {
+            ["player"] = foundUserId,
+            ["pet"] = petName,
+            ["color"] = hexCode,
+            ["variant"] = variant,
+            ["chance"] = chance,
+            ["rarity"] = rarity
+        }
+
+        return returnDict
+    end
+
+    local function uploadMessage(data)
+		local json = HttpService:JSONEncode(data)
+
+		local success, result = pcall(function()
+			return HttpService:PostAsync(
+				UPLOAD_URL,
+				json,
+				Enum.HttpContentType.ApplicationJson,
+				false, -- no compress
+				{
+					["Authorization"] = AUTH_KEY
+				}
+			)
+		end)
+
+		if not success then
+			warn("[RizzBot] Upload failed:", result)
+		end
+	end
+
+	-- Connection handler
+	local connection = TextChatService.MessageReceived:Connect(function(message)
+		local text = message.Text
+		local data = findHatch(text, userId)
+        uploadMessage(data)
+	end)
+
+	-- Return a simple API for external control
+	return {
+		stop = function()
+			if connection then
+				connection:Disconnect()
+				connection = nil
+				print("[RizzBot] Chat feed stopped")
+			end
+		end
+	}
 end

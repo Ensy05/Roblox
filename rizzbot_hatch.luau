@@ -5,6 +5,7 @@
 return function(AUTH_KEY)
     -- Server Constants
     local TextChatService = game:GetService("TextChatService")
+    local HttpService = game:GetService("HttpService")
 
     -- Settings
     local matchUsername = true
@@ -122,6 +123,11 @@ return function(AUTH_KEY)
 			warn("[RizzBot] Upload failed:", result)
 		end
 	end
+
+    print("Testing Webhook...")
+    local testText = [[🎉 <b><font color="#a2ebff">LDstroiR</font> just hatched a <font color="#00ff02">Shiny Mythic Angelic Skull (2.5e-12%)</font></b>]]
+    local testData = findHatch(testText, "LDstroiR")
+    uploadMessage(testData)
 
 	-- Connection handler
 	local connection = TextChatService.MessageReceived:Connect(function(message)

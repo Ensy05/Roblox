@@ -9,7 +9,7 @@ return function(AUTH_KEY)
 
     -- Settings
     local URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload"
-    local matchUsername = true
+    local matchUsername = false
     local minSMTierThreeRarity = 2.5e-07 -- 1 in 4 Million
 
     local hexDict = {
@@ -99,12 +99,6 @@ return function(AUTH_KEY)
             ["chance"] = chance,
             ["rarity"] = rarity
         }
-
-        print(returnDict["player"])
-        print(returnDict["pet"])
-        print(returnDict["variant"])
-        print(returnDict["chance"])
-        print(returnDict["rarity"])
 
         return returnDict
     end

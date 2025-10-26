@@ -48,14 +48,14 @@ return function(AUTH_KEY)
 
         -- Check for valid starting char
         if utf8.char(utf8.codepoint(text, 1)) ~= "🎉" then
-            return
+            return nil
         end
 
         local offset = 31 -- Holds the total offset the string will have.
         local foundUserId = text:sub(offset, offset + 20):match("([^<]+)") -- Verify that the userId matches if it exists.
 
         if userId ~= nil and foundUserId ~= foundUserId then
-            return
+            return nil
         end
 
         offset = offset + string.len(foundUserId) + 36 -- Offset to account for username length
@@ -63,7 +63,7 @@ return function(AUTH_KEY)
         local variant = hexDict[hexCode]
 
         if variant == nil then
-            return
+            return nil
         end
 
         if variant ~= "nil" then
@@ -74,7 +74,7 @@ return function(AUTH_KEY)
         local petName = text:sub(offset):match("([%w%s]+)%(")
 
         if petName == nil then
-            return
+            return nil
         end
 
         petName = petName:sub(1, -2)
@@ -89,7 +89,7 @@ return function(AUTH_KEY)
         end
 
         if rarity ~= "Secret" or not (variant == "Shiny Mythic" and baseChance <= minSMTierThreeRarity) then
-            return
+            return nil
         end
 
         local returnDict = {
@@ -127,13 +127,18 @@ return function(AUTH_KEY)
     print("Testing Webhook...")
     local testText = [[🎉 <b><font color="#a2ebff">LDstroiR</font> just hatched a <font color="#00ff02">Shiny Mythic Angelic Skull (2.5e-12%)</font></b>]]
     local testData = findHatch(testText, "LDstroiR")
-    uploadMessage(testData)
+    print(testData)
+    if testData ~= nil then
+        uploadMessage(testData)
+    end
 
 	-- Connection handler
 	local connection = TextChatService.MessageReceived:Connect(function(message)
 		local text = message.Text
 		local data = findHatch(text, userId)
-        uploadMessage(data)
+        if data ~= nil then
+            uploadMessage(data)
+        end
 	end)
 
 	-- Return a simple API for external control

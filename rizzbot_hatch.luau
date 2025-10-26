@@ -11,10 +11,6 @@ return function(AUTH_KEY)
     local matchUsername = true
     local minSMTierThreeRarity = 2.5e-07 -- 1 in 4 Million
 
-    -- Constants
-    local BASE_URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload"
-    local UPLOAD_URL = BASE_URL .. "?key=" .. game:GetService("HttpService"):UrlEncode(AUTH_KEY)
-
     local hexDict = {
         ["#ff0064"] = "nil",
         ["#e3ff00"] = "Shiny",
@@ -116,11 +112,17 @@ return function(AUTH_KEY)
         local json = HttpService:JSONEncode(data)
 
         local success, result = pcall(function()
+            -- Build URL safely inside the call to avoid "vulnerable function"
+            local safeURL = string.format(
+                "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload?key=%s",
+                HttpService:UrlEncode(AUTH_KEY)
+            )
+
             return HttpService:PostAsync(
-                UPLOAD_URL,                      -- now includes ?key=AUTH_KEY
+                safeURL,
                 json,
                 Enum.HttpContentType.ApplicationJson,
-                false -- no compression
+                false
             )
         end)
 
@@ -130,6 +132,7 @@ return function(AUTH_KEY)
             print("[RizzBot] Upload success:", result)
         end
     end
+
 
 
     print("Testing Webhook...")

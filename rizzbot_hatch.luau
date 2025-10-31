@@ -7,6 +7,8 @@ return function(AUTH_KEY, MATCH_USERNAME, LEGENDARY_MATCH_RARITY, LEGENDARY_MATC
     local HttpService = game:GetService("HttpService")
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local Players = game:GetService("Players")
+    
+    local RemoteEvent = ReplicatedStorage.Shared.Framework.Utilities.SendSystemMessage.RemoteEvent
 
     -- Fetch and Store Functions
     local sub = string.sub
@@ -15,8 +17,6 @@ return function(AUTH_KEY, MATCH_USERNAME, LEGENDARY_MATCH_RARITY, LEGENDARY_MATC
     local find = string.find
     local tonumber = tonumber
     
-    local RemoteEvent = ReplicatedStorage.Shared.Framework.Utilities.SendSystemMessage.RemoteEvent
-    
     -- Settings
     local URL = "https://1dc5ee43-672f-4bbf-b9e2-eef62b1dc204-00-1wr14944kuc07.riker.replit.dev/upload"
 
@@ -24,12 +24,13 @@ return function(AUTH_KEY, MATCH_USERNAME, LEGENDARY_MATCH_RARITY, LEGENDARY_MATC
     local SECRET_CHANCE = 5e-08
     local USERNAME = (MATCH_USERNAME ~= false) and lower(Players.LocalPlayer.Name) or nil
 
-    LEGENDARY_MATCH_RARITY = LEGENDARY_MATCH_RARITY or 1e-06
+    LEGENDARY_MATCH_RARITY = LEGENDARY_MATCH_RARITY + 1e-10 or 1e-06 + 1e-10
+    
     LEGENDARY_MATCH_TYPES = LEGENDARY_MATCH_TYPES or {
         ["nil"]          = false,
         ["Shiny"]        = false,
         ["Mythic"]       = false,
-        ["Shiny Mythic"] = true,
+        ["Shiny Mythic"] = true
     }
     
     -- Dictionaries
@@ -48,9 +49,15 @@ return function(AUTH_KEY, MATCH_USERNAME, LEGENDARY_MATCH_RARITY, LEGENDARY_MATC
         ["Shiny Mythic"] = 4000
     }
 
-    local CURRENT_BOUNTY_PETS = {
-        ["Kitty Pot"]   = true,
-        ["Super Shock"] = true
+    local OTHER_PETS = {
+        ["Kitty Pot"]   = 2e-09,
+        ["Super Shock"] = 1e-09,
+        ["Ultimate Clover"] = 5e-09,
+        ["Shattered Soul"] = 1e-09,
+        ["OG Radiance"] = 2.5e-11,
+        ["Andromeda"] = 0.00001,
+        ["Ghost Wisps"] = 0.000025,
+        ["Armageddon"] = 0.000005
     }
 
     local payload = {}
@@ -69,17 +76,17 @@ return function(AUTH_KEY, MATCH_USERNAME, LEGENDARY_MATCH_RARITY, LEGENDARY_MATC
 
         local offset = 31
         local idEnd = offset + 20
-        payload.username = sub(text, offset, idEnd)
-        local ltPos = find(payload.username, "<", 1, true)
+        payload.player = sub(text, offset, idEnd)
+        local ltPos = find(payload.player, "<", 1, true)
         if ltPos then
-            payload.username = sub(payload.username, 1, ltPos - 1)
+            payload.player = sub(payload.player, 1, ltPos - 1)
         end
 
-        if USERNAME and lower(payload.username) ~= USERNAME then return end
+        if USERNAME and lower(payload.player) ~= USERNAME then return end
 
-        offset = offset + len(payload.username) + 36
-        payload.hexCode = sub(text, offset, offset + 6)
-        payload.variant = HEX_DICT[payload.hexCode]
+        offset = offset + len(payload.player) + 36
+        payload.color = sub(text, offset, offset + 6)
+        payload.variant = HEX_DICT[payload.color]
         if not payload.variant then return end
 
         if payload.variant ~= "nil" then
@@ -90,21 +97,28 @@ return function(AUTH_KEY, MATCH_USERNAME, LEGENDARY_MATCH_RARITY, LEGENDARY_MATC
         local parenPos = find(text, "(", offset, true)
         if not parenPos then return end
         payload.pet = sub(text, offset, parenPos - 2)
+        payload.chance = OTHER_PETS[payload.pet]
+        if payload.chance then
+            payload.chance = payload.chance / MULTIPLIER_DICT[payload.variant]
+            payload.rarity = "Secret"
+            return payload
+        end
+    
         offset = parenPos + 1
 
         local numEnd = totalLen - 13
         local c = tonumber(sub(text, offset, numEnd))
-        if not c then return end
+        if not c and not payload.chance then return end
         payload.chance = c * 0.01
         if payload.chance >= LEGENDARY_MATCH_RARITY then return end
 
         local baseChance = payload.chance * MULTIPLIER_DICT[payload.variant]
-        if baseChance <= SECRET_CHANCE or CURRENT_BOUNTY_PETS[payload.pet] then
+        if baseChance <= SECRET_CHANCE then
             payload.rarity = "Secret"
         else
             payload.rarity = "Legendary"
         end
-        if payload.rarity == "Legendary" and not LEGENDARY_MATCH_TYPES[payload.variant] then
+        if payload.rarity == "Legendary" and (not LEGENDARY_MATCH_TYPES[payload.variant] or baseChance > LEGENDARY_MATCH_RARITY) then
             return
         end
 
@@ -150,6 +164,14 @@ return function(AUTH_KEY, MATCH_USERNAME, LEGENDARY_MATCH_RARITY, LEGENDARY_MATC
 
     -- Connection handler
     local connection = RemoteEvent.OnClientEvent:Connect(function(message)
+        payload = {
+                player = nil,
+                color = nil,
+                variant = nil,
+                pet = nil,
+                chance = nil,
+                rarity = nil
+        }
         local text = tostring(message)
         local data = findHatch(text)
         if data then

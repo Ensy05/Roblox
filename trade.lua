@@ -308,7 +308,7 @@ createTradeGui()
 UserInputService.InputBegan:Connect(function(input, gpe)
 	if gpe then return end
 
-	if input.KeyCode == Enum.KeyCode.RightShift then
+	if input.KeyCode == Enum.KeyCode.J then
 		if gui then
 			gui.Enabled = not gui.Enabled
 		end
@@ -340,6 +340,7 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 		end
 	end
 end)
+
 
 
 
